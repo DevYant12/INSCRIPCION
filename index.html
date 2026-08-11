@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Inscripciones — Taller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root{
+    --magenta:#EC1E79;
+    --magenta-deep:#A80F55;
+    --sunshine:#FFD400;
+    --sky:#29ABE2;
+    --grape:#7B4FC9;
+    --grape-deep:#5B33A0;
+    --mint:#1ECFC0;
+    --cream:#FFF7EA;
+    --ink:#241B3A;
+  }
+
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+
+  .page{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(41,171,226,0.16) 0, transparent 34%),
+      radial-gradient(circle at 92% 6%, rgba(255,212,0,0.22) 0, transparent 32%),
+      radial-gradient(circle at 90% 90%, rgba(236,30,121,0.12) 0, transparent 34%),
+      var(--cream);
+    font-family:'Nunito', sans-serif;
+    color:var(--ink);
+    padding:44px 18px 70px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .eyebrow{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.24em;
+    color:var(--grape);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(26px, 6vw, 38px);
+    margin:0 0 10px;
+    text-align:center;
+  }
+  h1 .accent{ color:var(--magenta); }
+
+  .subtitle{
+    max-width:420px;
+    text-align:center;
+    color:var(--ink);
+    opacity:0.65;
+    font-size:15px;
+    font-weight:700;
+    margin:0 auto 30px;
+  }
+
+  .card{
+    width:100%;
+    max-width:600px;
+    background:#fff;
+    border:4px solid var(--ink);
+    border-radius:26px;
+    box-shadow:7px 7px 0 var(--ink);
+    overflow:hidden;
+  }
+  .card-top{
+    background:linear-gradient(135deg, var(--grape), var(--magenta));
+    padding:20px 26px;
+    color:#fff;
+  }
+  .card-top h2{
+    font-family:'Baloo 2', sans-serif;
+    font-size:17px;
+    margin:0;
+    font-weight:700;
+  }
+  .card-bottom{ padding:26px; }
+
+  .field{ display:flex; flex-direction:column; margin-bottom:16px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  label{
+    font-family:'Baloo 2', sans-serif;
+    font-size:12.5px;
+    color:var(--grape-deep);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  input, select{
+    width:100%;
+    border:3px solid var(--ink);
+    border-radius:12px;
+    background:var(--cream);
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size:15.5px;
+    padding:11px 13px;
+    color:var(--ink);
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--sky); }
+  input::placeholder{ color:#B7ACC9; font-weight:600; }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%23241B3A' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:36px;
+  }
+
+  button.btn{
+    width:100%;
+    background:var(--magenta);
+    color:#fff;
+    border:3px solid var(--ink);
+    padding:13px 18px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:15.5px;
+    border-radius:14px;
+    cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  button.btn:hover{ transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--ink); }
+  button.btn:active{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--ink); }
+  button.btn:disabled{ opacity:0.6; cursor:default; }
+
+  .error{
+    font-family:'Nunito', sans-serif;
+    font-weight:800;
+    font-size:13px;
+    color:var(--magenta-deep);
+    min-height:16px;
+    margin-bottom:6px;
+  }
+
+  .list-panel{
+    width:100%;
+    max-width:640px;
+    margin-top:22px;
+    background:#fff;
+    border:4px solid var(--ink);
+    border-radius:26px;
+    padding:24px;
+    box-shadow:7px 7px 0 var(--ink);
+  }
+  .list-panel h3{
+    font-family:'Baloo 2', sans-serif;
+    font-size:16px;
+    margin:0 0 4px;
+  }
+  .list-note{
+    font-size:12.5px;
+    color:var(--grape-deep);
+    font-weight:800;
+    margin-bottom:14px;
+  }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td{ text-align:left; padding:8px 6px; border-bottom:1px solid #EDE7DC; }
+  th{ font-family:'Baloo 2', sans-serif; font-size:11px; color:var(--grape-deep); font-weight:700; }
+  .empty-row{ text-align:center; color:#B3A9C4; padding:18px 0; font-size:13px; }
+
+  .badge-estado{
+    display:inline-block; font-family:'Baloo 2', sans-serif; font-weight:700; font-size:11px;
+    padding:3px 9px; border-radius:20px; border:1.5px solid var(--ink);
+  }
+  .badge-estado.ingresado{ background:var(--mint); color:#fff; }
+  .badge-estado.pendiente{ background:var(--cream); color:var(--grape-deep); }
+
+  .nav-links{ display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap; justify-content:center; }
+  .nav-links a{
+    font-family:'Baloo 2', sans-serif; font-size:12.5px; font-weight:700; color:var(--grape-deep);
+    background:#fff; border:2.5px solid var(--ink); border-radius:10px; padding:7px 14px;
+    text-decoration:none; box-shadow:3px 3px 0 var(--ink);
+  }
+
+  .logout{
+    margin-top:20px;
+    background:none;
+    border:none;
+    color:#9A8FB0;
+    font-family:'Nunito', sans-serif;
+    font-size:12.5px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  .hidden{ display:none !important; }
+
+  .debug{
+    max-width:640px;
+    width:100%;
+    margin-top:14px;
+    font-family:monospace;
+    font-size:11px;
+    color:#A80F55;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+
+  /* ===== Modal de invitación generada ===== */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(36,27,58,0.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+  }
+  .modal-card{
+    width:100%; max-width:460px; background:var(--cream); border:4px solid var(--ink);
+    border-radius:26px; box-shadow:8px 8px 0 var(--ink); padding:22px;
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+    max-height:92vh; overflow-y:auto;
+  }
+  .modal-title{
+    font-family:'Baloo 2', sans-serif; font-weight:800; font-size:18px; text-align:center; margin:0;
+  }
+  .modal-title .accent{ color:var(--magenta); }
+  .modal-hint{ font-size:12.5px; font-weight:700; color:var(--grape-deep); text-align:center; margin:-8px 0 0; }
+
+  /* TICKET (plantilla oficial) */
+  .ticket-col{
+    display:flex; flex-direction:column; align-items:center; width:100%;
+  }
+  .ticket{
+    width:100%; position:relative;
+    aspect-ratio: 1536 / 1024;
+    container-type: inline-size;
+  }
+  .ticket-bg{
+    position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none;
+  }
+  .t-qr{
+    position:absolute; left:76.5%; top:15.6%; width:17.4%; height:22.3%;
+    background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .t-qr img, .t-qr canvas{ display:block; width:auto !important; height:100% !important; aspect-ratio:1/1; }
+  .t-personas-num{
+    position:absolute; left:89.2%; top:46.9%; width:5.9%; height:4.4%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2', sans-serif; font-weight:800; color:var(--ink);
+    font-size:3.6cqw; line-height:1;
+  }
+
+  .t-guestcard{
+    width:100%; margin-top:10px; background:#fff; border:3px solid var(--ink);
+    border-radius:16px; padding:12px 16px; box-shadow:5px 5px 0 var(--ink); text-align:center;
+  }
+  .t-guest-label{
+    font-family:'Baloo 2', sans-serif; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--grape-deep); font-weight:700; margin-bottom:3px;
+  }
+  .t-guest-name{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:17px; color:var(--ink); word-break:break-word; }
+  .t-codigo{ font-family:monospace; font-weight:700; font-size:11px; color:#8A7FA0; letter-spacing:0.02em; margin-top:4px; }
+
+  .modal-actions{ width:100%; display:flex; flex-direction:column; gap:10px; }
+  .modal-actions .btn.secondary{ background:var(--sky); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="eyebrow">Panel privado</div>
+  <h1>Inscripciones del <span class="accent">taller</span></h1>
+  <p class="subtitle">Registra a cada persona solo después de confirmar su pago por WhatsApp.</p>
+
+  <div class="nav-links">
+    <a href="invitaciones.html">🎟 Generar invitaciones</a>
+    <a href="escaner.html">📷 Escáner de entrada</a>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <div class="card-bottom">
+      <div class="field">
+        <label for="pinInput">PIN de acceso</label>
+        <input type="password" id="pinInput" inputmode="numeric" placeholder="••••">
+      </div>
+      <div class="error" id="loginError"></div>
+      <button class="btn" id="loginBtn" type="button">Entrar</button>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panelWrap" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+
+    <div class="card">
+      <div class="card-top"><h2>Inscribir persona</h2></div>
+      <div class="card-bottom">
+        <div class="row2">
+          <div class="field">
+            <label for="nombreInput">Nombre completo</label>
+            <input type="text" id="nombreInput" placeholder="Nombre de la persona">
+          </div>
+          <div class="field">
+            <label for="personasInput">Personas</label>
+            <select id="personasInput">
+              <option value="1">1 persona</option>
+              <option value="2">2 personas</option>
+              <option value="3">3 personas</option>
+              <option value="4">4 personas</option>
+              <option value="5">5 personas</option>
+              <option value="6">6 personas</option>
+              <option value="7">7 personas</option>
+              <option value="8">8 personas</option>
+            </select>
+          </div>
+        </div>
+        <div class="error" id="formError"></div>
+        <button class="btn" id="addBtn" type="button">Inscribir y generar código</button>
+      </div>
+    </div>
+
+    <div class="list-panel">
+      <h3>Inscritos confirmados</h3>
+      <div class="list-note" id="summary"></div>
+      <table>
+        <thead>
+          <tr><th>Código</th><th>Nombre</th><th>Personas</th><th>Total</th><th>Estado</th></tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+    </div>
+
+    <button class="logout" id="logoutBtn">Cerrar sesión</button>
+    <div class="debug" id="debugBox"></div>
+  </div>
+
+</div>
+
+<!-- Modal: invitación recién generada -->
+<div class="modal-overlay hidden" id="inviteModal">
+  <div class="modal-card">
+    <h3 class="modal-title">¡Inscrito! Aquí está su <span class="accent">invitación</span></h3>
+    <p class="modal-hint">Descárgala y envíasela por WhatsApp a la persona.</p>
+
+    <div class="ticket-col">
+      <div class="ticket" id="inviteTicket">
+        <img class="ticket-bg" src="entrada-plantilla.png" alt="">
+        <div class="t-qr" id="inviteQr"></div>
+        <div class="t-personas-num" id="invitePersonas"></div>
+      </div>
+      <div class="t-guestcard">
+        <div class="t-guest-label">Entrada a nombre de</div>
+        <div class="t-guest-name" id="inviteNombre"></div>
+        <div class="t-codigo" id="inviteCodigo"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="downloadInviteBtn" type="button">⬇ Descargar invitación</button>
+      <button class="btn secondary" id="closeInviteBtn" type="button">Inscribir otra persona</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =========================================================
+  // PEGA AQUÍ LA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT
+  // (la que copiaste al implementar Code.gs). Debe verse así:
+  // https://script.google.com/macros/s/AKfycb.../exec
+  // =========================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxtxKpcbDSlr7L2JXlZEWOR-npLZ6W83_qyZqqEofK7Ho7yOlcQDzwzUM9vcXt1q75sg/exec';
+
+  const ADMIN_PIN = '2708';
+
+  const loginCard = document.getElementById('loginCard');
+  const panelWrap = document.getElementById('panelWrap');
+  const pinInput = document.getElementById('pinInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const nombreInput = document.getElementById('nombreInput');
+  const personasInput = document.getElementById('personasInput');
+  const formError = document.getElementById('formError');
+  const addBtn = document.getElementById('addBtn');
+  const tablaBody = document.getElementById('tablaBody');
+  const summary = document.getElementById('summary');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const debugBox = document.getElementById('debugBox');
+
+  const inviteModal = document.getElementById('inviteModal');
+  const inviteTicket = document.getElementById('inviteTicket');
+  const inviteNombre = document.getElementById('inviteNombre');
+  const invitePersonas = document.getElementById('invitePersonas');
+  const inviteQr = document.getElementById('inviteQr');
+  const inviteCodigo = document.getElementById('inviteCodigo');
+  const downloadInviteBtn = document.getElementById('downloadInviteBtn');
+  const closeInviteBtn = document.getElementById('closeInviteBtn');
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function getEntries(){
+    try{
+      const res = await fetch(SCRIPT_URL, { method: 'GET' });
+      const data = await res.json();
+      if(!data.ok){ throw new Error(data.error || 'Respuesta no válida'); }
+      return (data.entries || []).sort((a,b)=> (a.ts||0) - (b.ts||0));
+    }catch(e){
+      debugBox.textContent = 'Error al leer los inscritos: ' + (e && e.message ? e.message : e);
+      return [];
+    }
+  }
+
+  async function renderConfirmed(){
+    const confirmed = await getEntries();
+    const totalPeople = confirmed.reduce((sum,e)=> sum + (parseInt(e.personas)||1), 0);
+    const totalMoney = confirmed.reduce((sum,e)=> sum + (parseInt(e.total)||0), 0);
+
+    summary.textContent = confirmed.length === 0
+      ? 'Todavía no hay inscritos confirmados'
+      : confirmed.length + ' inscritos · ' + totalPeople + ' personas · $' + totalMoney + ' recaudado';
+
+    if(confirmed.length === 0){
+      tablaBody.innerHTML = '<tr><td colspan="5" class="empty-row">Sin registros</td></tr>';
+      return;
+    }
+    tablaBody.innerHTML = confirmed.map(e => {
+      const ingresado = e.estado === 'Ingresado';
+      const badge = '<span class="badge-estado ' + (ingresado ? 'ingresado' : 'pendiente') + '">' +
+        (ingresado ? '✅ Ingresó' : '⏳ Pendiente') + '</span>';
+      return '<tr><td>' + escapeHtml(e.codigo || '—') + '</td><td>' + escapeHtml(e.nombre) + '</td><td>' + (e.personas||1) + '</td><td>$' + (e.total||0) + '</td><td>' + badge + '</td></tr>';
+    }).join('');
+  }
+
+  function mostrarPanel(mostrar){
+    loginCard.classList.toggle('hidden', mostrar);
+    panelWrap.classList.toggle('hidden', !mostrar);
+  }
+
+  function nombreArchivo(entry){
+    const limpio = (entry.nombre || 'invitado').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return 'invitacion-' + limpio + '-' + entry.codigo + '.png';
+  }
+
+  function mostrarInvitacion(entry){
+    const personas = parseInt(entry.personas) || 1;
+    inviteNombre.textContent = entry.nombre;
+    invitePersonas.textContent = personas;
+    inviteCodigo.textContent = entry.codigo;
+
+    inviteQr.innerHTML = '';
+    new QRCode(inviteQr, {
+      text: entry.codigo,
+      width: 300,
+      height: 300,
+      colorDark: '#241B3A',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    downloadInviteBtn.dataset.filename = nombreArchivo(entry);
+    inviteModal.classList.remove('hidden');
+  }
+
+  async function esperarImagenes(el){
+    const imgs = el.querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() :
+      new Promise(res => { img.onload = res; img.onerror = res; })));
+  }
+
+  downloadInviteBtn.addEventListener('click', async ()=>{
+    downloadInviteBtn.disabled = true;
+    downloadInviteBtn.textContent = 'Generando…';
+    try{
+      if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+      const ticketCol = inviteTicket.closest('.ticket-col');
+      await esperarImagenes(ticketCol);
+      const canvas = await html2canvas(ticketCol, {
+        backgroundColor: '#FFF7EA',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadInviteBtn.dataset.filename || 'invitacion.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    }catch(err){
+      alert('No se pudo generar la imagen: ' + (err && err.message ? err.message : err));
+    }finally{
+      downloadInviteBtn.disabled = false;
+      downloadInviteBtn.textContent = '⬇ Descargar invitación';
+    }
+  });
+
+  closeInviteBtn.addEventListener('click', ()=>{
+    inviteModal.classList.add('hidden');
+    nombreInput.focus();
+  });
+
+  loginBtn.addEventListener('click', ()=>{
+    loginError.textContent = '';
+    if(pinInput.value.trim() !== ADMIN_PIN){
+      loginError.textContent = 'PIN incorrecto.';
+      return;
+    }
+    pinInput.value = '';
+    mostrarPanel(true);
+    renderConfirmed();
+  });
+
+  pinInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') loginBtn.click();
+  });
+
+  logoutBtn.addEventListener('click', ()=>{
+    mostrarPanel(false);
+  });
+
+  addBtn.addEventListener('click', async ()=>{
+    formError.textContent = '';
+    debugBox.textContent = '';
+    const nombre = nombreInput.value.trim();
+    const personas = parseInt(personasInput.value);
+
+    if(!nombre){
+      formError.textContent = 'Escribe el nombre de la persona.';
+      return;
+    }
+
+    if(SCRIPT_URL.indexOf('PEGA_AQUI') !== -1){
+      formError.textContent = 'Falta configurar la URL del backend (SCRIPT_URL) en el código.';
+      return;
+    }
+
+    addBtn.disabled = true;
+    addBtn.textContent = 'Inscribiendo...';
+
+    try{
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS
+        body: JSON.stringify({ nombre, personas })
+      });
+      const data = await res.json();
+      if(!data.ok){ throw new Error(data.error || 'No se pudo guardar'); }
+
+      nombreInput.value = '';
+      personasInput.value = '1';
+      await renderConfirmed();
+
+      formError.style.color = 'var(--mint)';
+      formError.textContent = 'Inscrito con código ' + data.entry.codigo;
+      setTimeout(()=>{ formError.textContent=''; formError.style.color=''; }, 4000);
+
+      mostrarInvitacion(data.entry);
+
+    }catch(err){
+      formError.textContent = 'No se pudo inscribir. Intenta de nuevo.';
+      debugBox.textContent = 'Detalle del error: ' + (err && err.message ? err.message : String(err));
+    }finally{
+      addBtn.disabled = false;
+      addBtn.textContent = 'Inscribir y generar código';
+    }
+  });
+</script>
+</body>
+</html>

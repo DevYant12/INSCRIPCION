@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitaciones — Taller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root{
+    --magenta:#EC1E79;
+    --magenta-deep:#A80F55;
+    --sunshine:#FFD400;
+    --sky:#29ABE2;
+    --grape:#7B4FC9;
+    --grape-deep:#5B33A0;
+    --mint:#1ECFC0;
+    --cream:#FFF7EA;
+    --ink:#241B3A;
+  }
+
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+
+  .page{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(41,171,226,0.16) 0, transparent 34%),
+      radial-gradient(circle at 92% 6%, rgba(255,212,0,0.22) 0, transparent 32%),
+      radial-gradient(circle at 90% 90%, rgba(236,30,121,0.12) 0, transparent 34%),
+      var(--cream);
+    font-family:'Nunito', sans-serif;
+    color:var(--ink);
+    padding:44px 18px 70px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .eyebrow{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.24em;
+    color:var(--grape);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(24px, 5.5vw, 34px);
+    margin:0 0 8px;
+    text-align:center;
+  }
+  h1 .accent{ color:var(--magenta); }
+  .subtitle{
+    max-width:460px;
+    text-align:center;
+    color:var(--ink);
+    opacity:0.65;
+    font-size:14.5px;
+    font-weight:700;
+    margin:0 auto 26px;
+  }
+
+  .nav-links{ display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap; justify-content:center; }
+  .nav-links a{
+    font-family:'Baloo 2', sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--grape-deep);
+    background:#fff;
+    border:2.5px solid var(--ink);
+    border-radius:10px;
+    padding:7px 14px;
+    text-decoration:none;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+
+  /* LOGIN (reused pattern) */
+  .card{
+    width:100%; max-width:400px; background:#fff; border:4px solid var(--ink);
+    border-radius:26px; box-shadow:7px 7px 0 var(--ink); overflow:hidden;
+  }
+  .card-bottom{ padding:26px; }
+  .field{ display:flex; flex-direction:column; margin-bottom:16px; }
+  label{ font-family:'Baloo 2', sans-serif; font-size:12.5px; color:var(--grape-deep); font-weight:700; margin-bottom:6px; }
+  input{
+    width:100%; border:3px solid var(--ink); border-radius:12px; background:var(--cream);
+    font-family:'Nunito', sans-serif; font-weight:700; font-size:15.5px; padding:11px 13px; color:var(--ink);
+  }
+  input:focus{ outline:none; border-color:var(--sky); }
+  button.btn{
+    width:100%; background:var(--magenta); color:#fff; border:3px solid var(--ink);
+    padding:13px 18px; font-family:'Baloo 2', sans-serif; font-weight:700; font-size:15.5px;
+    border-radius:14px; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  button.btn:hover{ transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--ink); }
+  button.btn:active{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--ink); }
+  button.btn:disabled{ opacity:0.6; cursor:default; }
+  button.btn.secondary{ background:var(--sky); }
+  button.btn.small{ width:auto; font-size:13px; padding:9px 16px; }
+  .error{ font-family:'Nunito', sans-serif; font-weight:800; font-size:13px; color:var(--magenta-deep); min-height:16px; margin-bottom:6px; }
+
+  .toolbar{
+    width:100%; max-width:1040px; display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px; margin-bottom:22px;
+  }
+  .toolbar .count{ font-family:'Baloo 2', sans-serif; font-size:14px; color:var(--grape-deep); font-weight:700; }
+
+  .hidden{ display:none !important; }
+
+  .grid{
+    width:100%; max-width:1040px; display:flex; flex-direction:column; gap:22px;
+  }
+
+  /* TICKET (plantilla oficial) */
+  .ticket-row{
+    display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;
+  }
+  .ticket-col{
+    display:flex; flex-direction:column; align-items:center; width:100%; max-width:640px; gap:0;
+  }
+  .ticket{
+    width:100%; max-width:640px; position:relative;
+    aspect-ratio: 1536 / 1024;
+    container-type: inline-size;
+  }
+  .ticket-bg{
+    position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none;
+  }
+  .t-qr{
+    position:absolute; left:76.5%; top:15.6%; width:17.4%; height:22.3%;
+    background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .t-qr img, .t-qr canvas{ display:block; width:auto !important; height:100% !important; aspect-ratio:1/1; }
+  .t-personas-num{
+    position:absolute; left:89.2%; top:46.9%; width:5.9%; height:4.4%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2', sans-serif; font-weight:800; color:var(--ink);
+    font-size:3.6cqw; line-height:1;
+  }
+
+  .t-guestcard{
+    width:100%; max-width:640px; margin-top:10px; background:#fff; border:3px solid var(--ink);
+    border-radius:16px; padding:12px 16px; box-shadow:5px 5px 0 var(--ink); text-align:center;
+  }
+  .t-guest-label{
+    font-family:'Baloo 2', sans-serif; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--grape-deep); font-weight:700; margin-bottom:3px;
+  }
+  .t-guest-name{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:17px; color:var(--ink); word-break:break-word; }
+  .t-codigo{ font-family:monospace; font-weight:700; font-size:11px; color:#8A7FA0; letter-spacing:0.02em; margin-top:4px; }
+
+  .row-actions{ display:flex; flex-direction:column; gap:8px; width:100%; max-width:640px; }
+  .row-actions .status{
+    font-family:'Baloo 2', sans-serif; font-size:11px; font-weight:700; color:#8A7FA0;
+  }
+
+  .empty-row{
+    text-align:center; color:#B3A9C4; padding:40px 0; font-size:14px; font-weight:700;
+    font-family:'Baloo 2', sans-serif;
+  }
+
+  .logout{
+    margin-top:26px; background:none; border:none; color:#9A8FB0; font-family:'Nunito', sans-serif;
+    font-size:12.5px; cursor:pointer; text-decoration:underline;
+  }
+
+  @media (max-width: 560px){
+    .ticket-row{ flex-direction:column; align-items:center; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Panel privado</div>
+  <h1>Generar <span class="accent">invitaciones</span></h1>
+  <p class="subtitle">Crea una imagen de entrada con código QR para cada inscrito confirmado y envíasela por WhatsApp.</p>
+
+  <div class="nav-links">
+    <a href="index.html">← Volver a inscripciones</a>
+    <a href="escaner.html">Ir al escáner de entrada →</a>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <div class="card-bottom">
+      <div class="field">
+        <label for="pinInput">PIN de acceso</label>
+        <input type="password" id="pinInput" inputmode="numeric" placeholder="••••">
+      </div>
+      <div class="error" id="loginError"></div>
+      <button class="btn" id="loginBtn" type="button">Entrar</button>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panelWrap" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+
+    <div class="toolbar">
+      <div class="count" id="countText">Cargando inscritos…</div>
+      <button class="btn secondary small" id="downloadAllBtn" type="button">⬇ Descargar todas (ZIP)</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <button class="logout" id="logoutBtn">Cerrar sesión</button>
+  </div>
+
+</div>
+
+<!-- Plantilla oculta de un ticket -->
+<template id="ticketTemplate">
+  <div class="ticket-row">
+    <div class="ticket-col">
+      <div class="ticket" data-capture>
+        <img class="ticket-bg" src="entrada-plantilla.png" alt="">
+        <div class="t-qr" data-field="qr"></div>
+        <div class="t-personas-num" data-field="personasNum"></div>
+      </div>
+      <div class="t-guestcard">
+        <div class="t-guest-label">Entrada a nombre de</div>
+        <div class="t-guest-name" data-field="nombre"></div>
+        <div class="t-codigo" data-field="codigo"></div>
+      </div>
+    </div>
+    <div class="row-actions">
+      <button class="btn small" data-action="download" type="button">⬇ Descargar imagen</button>
+      <span class="status" data-field="estado"></span>
+    </div>
+  </div>
+</template>
+
+<script>
+  // =========================================================
+  // PEGA AQUÍ LA MISMA URL DE APPS SCRIPT QUE USA index.html
+  // =========================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxtxKpcbDSlr7L2JXlZEWOR-npLZ6W83_qyZqqEofK7Ho7yOlcQDzwzUM9vcXt1q75sg/exec';
+  const ADMIN_PIN = '2708';
+
+  const loginCard = document.getElementById('loginCard');
+  const panelWrap = document.getElementById('panelWrap');
+  const pinInput = document.getElementById('pinInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const grid = document.getElementById('grid');
+  const countText = document.getElementById('countText');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const ticketTemplate = document.getElementById('ticketTemplate');
+
+  let entries = [];
+
+  function mostrarPanel(mostrar){
+    loginCard.classList.toggle('hidden', mostrar);
+    panelWrap.classList.toggle('hidden', !mostrar);
+  }
+
+  loginBtn.addEventListener('click', async ()=>{
+    loginError.textContent = '';
+    if(pinInput.value.trim() !== ADMIN_PIN){
+      loginError.textContent = 'PIN incorrecto.';
+      return;
+    }
+    pinInput.value = '';
+    mostrarPanel(true);
+    await cargarInscritos();
+  });
+  pinInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loginBtn.click(); });
+  logoutBtn.addEventListener('click', ()=> mostrarPanel(false));
+
+  async function cargarInscritos(){
+    countText.textContent = 'Cargando inscritos…';
+    grid.innerHTML = '';
+    try{
+      const res = await fetch(SCRIPT_URL, { method: 'GET' });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Respuesta no válida');
+      entries = (data.entries || []).sort((a,b)=> (a.ts||0) - (b.ts||0));
+    }catch(e){
+      countText.textContent = 'Error al cargar inscritos: ' + (e && e.message ? e.message : e);
+      return;
+    }
+
+    if(entries.length === 0){
+      countText.textContent = 'Todavía no hay inscritos confirmados';
+      grid.innerHTML = '<div class="empty-row">Inscribe personas primero desde el panel principal.</div>';
+      return;
+    }
+
+    countText.textContent = entries.length + ' invitaciones listas para generar';
+
+    entries.forEach(entry => {
+      const node = ticketTemplate.content.cloneNode(true);
+      const row = node.querySelector('.ticket-row');
+      const personas = parseInt(entry.personas) || 1;
+
+      node.querySelector('[data-field="nombre"]').textContent = entry.nombre;
+      node.querySelector('[data-field="personasNum"]').textContent = personas;
+      node.querySelector('[data-field="codigo"]').textContent = entry.codigo;
+
+      const estado = entry.estado || 'Pendiente';
+      const statusEl = node.querySelector('[data-field="estado"]');
+      statusEl.textContent = estado === 'Ingresado' ? '✅ Ya ingresó al evento' : '⏳ Pendiente de ingreso';
+
+      const qrBox = node.querySelector('[data-field="qr"]');
+      new QRCode(qrBox, {
+        text: entry.codigo,
+        width: 300,
+        height: 300,
+        colorDark: '#241B3A',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      const downloadBtn = node.querySelector('[data-action="download"]');
+      downloadBtn.addEventListener('click', async ()=>{
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = 'Generando…';
+        try{
+          const blob = await ticketToBlob(row.querySelector('.ticket-col'));
+          descargarBlob(blob, nombreArchivo(entry));
+        }catch(err){
+          alert('No se pudo generar la imagen: ' + (err && err.message ? err.message : err));
+        }finally{
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = '⬇ Descargar imagen';
+        }
+      });
+
+      grid.appendChild(node);
+    });
+  }
+
+  function nombreArchivo(entry){
+    const limpio = (entry.nombre || 'invitado').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return 'invitacion-' + limpio + '-' + entry.codigo + '.png';
+  }
+
+  async function esperarImagenes(el){
+    const imgs = el.querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() :
+      new Promise(res => { img.onload = res; img.onerror = res; })));
+  }
+
+  async function ticketToBlob(ticketEl){
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+    await esperarImagenes(ticketEl);
+    const canvas = await html2canvas(ticketEl, {
+      backgroundColor: '#FFF7EA',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  }
+
+  function descargarBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+  }
+
+  downloadAllBtn.addEventListener('click', async ()=>{
+    if(entries.length === 0) return;
+    downloadAllBtn.disabled = true;
+    downloadAllBtn.textContent = 'Generando 0/' + entries.length + '…';
+
+    try{
+      const zip = new JSZip();
+      const rows = document.querySelectorAll('.ticket-row');
+      for(let i = 0; i < rows.length; i++){
+        const entry = entries[i];
+        const ticketEl = rows[i].querySelector('.ticket-col');
+        const blob = await ticketToBlob(ticketEl);
+        zip.file(nombreArchivo(entry), blob);
+        downloadAllBtn.textContent = 'Generando ' + (i+1) + '/' + entries.length + '…';
+      }
+      const content = await zip.generateAsync({ type: 'blob' });
+      descargarBlob(content, 'invitaciones-taller.zip');
+    }catch(err){
+      alert('No se pudo generar el ZIP: ' + (err && err.message ? err.message : err));
+    }finally{
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = '⬇ Descargar todas (ZIP)';
+    }
+  });
+</script>
+</body>
+</html>

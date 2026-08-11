@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escáner de entrada — Taller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<style>
+  :root{
+    --magenta:#EC1E79; --magenta-deep:#A80F55; --sunshine:#FFD400; --sky:#29ABE2;
+    --grape:#7B4FC9; --grape-deep:#5B33A0; --mint:#1ECFC0; --cream:#FFF7EA; --ink:#241B3A;
+    --ok:#1ECFC0; --bad:#EC1E79;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+  .page{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(41,171,226,0.16) 0, transparent 34%),
+      radial-gradient(circle at 92% 6%, rgba(255,212,0,0.22) 0, transparent 32%),
+      var(--cream);
+    font-family:'Nunito', sans-serif; color:var(--ink);
+    padding:32px 16px 60px; display:flex; flex-direction:column; align-items:center;
+  }
+  .eyebrow{
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em;
+    color:var(--grape); text-transform:uppercase; margin-bottom:6px;
+  }
+  h1{
+    font-family:'Baloo 2', sans-serif; font-weight:800; font-size:clamp(22px, 6vw, 30px);
+    margin:0 0 18px; text-align:center;
+  }
+  h1 .accent{ color:var(--magenta); }
+
+  .nav-links{ display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; justify-content:center; }
+  .nav-links a{
+    font-family:'Baloo 2', sans-serif; font-size:12.5px; font-weight:700; color:var(--grape-deep);
+    background:#fff; border:2.5px solid var(--ink); border-radius:10px; padding:7px 14px;
+    text-decoration:none; box-shadow:3px 3px 0 var(--ink);
+  }
+
+  .card{
+    width:100%; max-width:420px; background:#fff; border:4px solid var(--ink);
+    border-radius:26px; box-shadow:7px 7px 0 var(--ink); overflow:hidden;
+  }
+  .card-bottom{ padding:24px; }
+  .field{ display:flex; flex-direction:column; margin-bottom:16px; }
+  label{ font-family:'Baloo 2', sans-serif; font-size:12.5px; color:var(--grape-deep); font-weight:700; margin-bottom:6px; }
+  input{
+    width:100%; border:3px solid var(--ink); border-radius:12px; background:var(--cream);
+    font-family:'Nunito', sans-serif; font-weight:700; font-size:15.5px; padding:11px 13px; color:var(--ink);
+  }
+  input:focus{ outline:none; border-color:var(--sky); }
+  button.btn{
+    width:100%; background:var(--magenta); color:#fff; border:3px solid var(--ink);
+    padding:13px 18px; font-family:'Baloo 2', sans-serif; font-weight:700; font-size:15.5px;
+    border-radius:14px; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  button.btn:hover{ transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--ink); }
+  button.btn:active{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--ink); }
+  button.btn:disabled{ opacity:0.6; cursor:default; }
+  button.btn.secondary{ background:var(--sky); }
+  .error{ font-family:'Nunito', sans-serif; font-weight:800; font-size:13px; color:var(--magenta-deep); min-height:16px; margin-bottom:6px; }
+
+  .hidden{ display:none !important; }
+
+  .scan-wrap{
+    width:100%; max-width:420px; background:#000; border:4px solid var(--ink); border-radius:26px;
+    box-shadow:7px 7px 0 var(--ink); overflow:hidden; position:relative; aspect-ratio:3/4;
+  }
+  video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .scan-frame{
+    position:absolute; inset:14% 14%; border:4px dashed rgba(255,255,255,0.8); border-radius:20px;
+    pointer-events:none;
+  }
+  .scan-hint{
+    position:absolute; bottom:14px; left:0; right:0; text-align:center; color:#fff;
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:12.5px; text-shadow:0 1px 4px rgba(0,0,0,0.6);
+  }
+
+  .manual{
+    width:100%; max-width:420px; margin-top:16px; background:#fff; border:3px solid var(--ink);
+    border-radius:18px; padding:16px; box-shadow:5px 5px 0 var(--ink);
+  }
+  .manual .row{ display:flex; gap:8px; }
+  .manual input{ flex:1; }
+  .manual .btn{ width:auto; padding:11px 16px; font-size:13.5px; }
+  .manual label{ margin-bottom:8px; display:block; }
+
+  /* Resultado */
+  .result{
+    width:100%; max-width:420px; border:4px solid var(--ink); border-radius:26px;
+    box-shadow:7px 7px 0 var(--ink); padding:30px 24px; text-align:center; color:#fff;
+  }
+  .result.ok{ background:linear-gradient(160deg, var(--mint), #12a89c); }
+  .result.bad{ background:linear-gradient(160deg, var(--magenta), var(--magenta-deep)); }
+  .result .icon{ font-size:52px; margin-bottom:6px; }
+  .result .headline{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:22px; margin-bottom:14px; }
+  .result .guest{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size:18px; margin-bottom:4px; }
+  .result .detail{ font-size:14px; font-weight:700; opacity:0.92; margin-bottom:4px; }
+  .result .code{ font-family:monospace; font-size:12px; opacity:0.85; margin-top:10px; }
+  .result button{
+    margin-top:20px; width:100%; background:#fff; color:var(--ink); border:3px solid var(--ink);
+    padding:13px 18px; font-family:'Baloo 2', sans-serif; font-weight:700; font-size:15.5px;
+    border-radius:14px; cursor:pointer; box-shadow:4px 4px 0 rgba(0,0,0,0.25);
+  }
+
+  .stats{
+    margin-top:18px; font-family:'Baloo 2', sans-serif; font-size:12.5px; color:var(--grape-deep); font-weight:700;
+  }
+
+  .logout{
+    margin-top:22px; background:none; border:none; color:#9A8FB0; font-family:'Nunito', sans-serif;
+    font-size:12.5px; cursor:pointer; text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Control de acceso</div>
+  <h1>Escáner de <span class="accent">entrada</span></h1>
+
+  <div class="nav-links">
+    <a href="index.html">← Panel de inscripciones</a>
+    <a href="invitaciones.html">Generar invitaciones →</a>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <div class="card-bottom">
+      <div class="field">
+        <label for="pinInput">PIN de acceso</label>
+        <input type="password" id="pinInput" inputmode="numeric" placeholder="••••">
+      </div>
+      <div class="error" id="loginError"></div>
+      <button class="btn" id="loginBtn" type="button">Entrar</button>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panelWrap" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+
+    <div id="scanView" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+      <div class="scan-wrap">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="scan-frame"></div>
+        <div class="scan-hint" id="scanHint">Apunta la cámara al código QR de la invitación</div>
+      </div>
+
+      <div class="manual">
+        <label for="manualInput">¿No lee la cámara? Escribe el código a mano</label>
+        <div class="row">
+          <input type="text" id="manualInput" placeholder="TC-003-AB12">
+          <button class="btn secondary" id="manualBtn" type="button">Validar</button>
+        </div>
+      </div>
+
+      <div class="stats" id="statsText"></div>
+    </div>
+
+    <div id="resultView" class="hidden" style="width:100%; display:flex; justify-content:center;"></div>
+
+    <button class="logout" id="logoutBtn">Cerrar sesión</button>
+  </div>
+
+</div>
+
+<canvas id="hiddenCanvas" class="hidden"></canvas>
+
+<script>
+  // =========================================================
+  // PEGA AQUÍ LA MISMA URL DE APPS SCRIPT QUE USA index.html
+  // =========================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxtxKpcbDSlr7L2JXlZEWOR-npLZ6W83_qyZqqEofK7Ho7yOlcQDzwzUM9vcXt1q75sg/exec';
+  const ADMIN_PIN = '2708';
+
+  const loginCard = document.getElementById('loginCard');
+  const panelWrap = document.getElementById('panelWrap');
+  const pinInput = document.getElementById('pinInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const video = document.getElementById('video');
+  const scanView = document.getElementById('scanView');
+  const resultView = document.getElementById('resultView');
+  const scanHint = document.getElementById('scanHint');
+  const manualInput = document.getElementById('manualInput');
+  const manualBtn = document.getElementById('manualBtn');
+  const statsText = document.getElementById('statsText');
+  const hiddenCanvas = document.getElementById('hiddenCanvas');
+  const ctx = hiddenCanvas.getContext('2d', { willReadFrequently: true });
+
+  let scanning = false;
+  let paused = false;
+  let stream = null;
+  let scanCount = { ok: 0, rechazado: 0 };
+
+  function mostrarPanel(mostrar){
+    loginCard.classList.toggle('hidden', mostrar);
+    panelWrap.classList.toggle('hidden', !mostrar);
+  }
+
+  loginBtn.addEventListener('click', async ()=>{
+    loginError.textContent = '';
+    if(pinInput.value.trim() !== ADMIN_PIN){
+      loginError.textContent = 'PIN incorrecto.';
+      return;
+    }
+    pinInput.value = '';
+    mostrarPanel(true);
+    actualizarStats();
+    await iniciarCamara();
+  });
+  pinInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loginBtn.click(); });
+
+  logoutBtn.addEventListener('click', ()=>{
+    detenerCamara();
+    mostrarPanel(false);
+  });
+
+  async function iniciarCamara(){
+    scanHint.textContent = 'Activando cámara…';
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      video.srcObject = stream;
+      await video.play();
+      scanHint.textContent = 'Apunta la cámara al código QR de la invitación';
+      scanning = true;
+      requestAnimationFrame(tick);
+    }catch(err){
+      scanHint.textContent = 'No se pudo abrir la cámara. Usa el campo de abajo para escribir el código.';
+    }
+  }
+
+  function detenerCamara(){
+    scanning = false;
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+
+  function tick(){
+    if(!scanning) return;
+    if(!paused && video.readyState === video.HAVE_ENOUGH_DATA){
+      hiddenCanvas.width = video.videoWidth;
+      hiddenCanvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+      const imageData = ctx.getImageData(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+      if(code && code.data){
+        paused = true;
+        procesarCodigo(code.data.trim());
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  manualBtn.addEventListener('click', ()=>{
+    const val = manualInput.value.trim();
+    if(!val) return;
+    paused = true;
+    procesarCodigo(val);
+  });
+  manualInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') manualBtn.click(); });
+
+  async function procesarCodigo(codigo){
+    scanHint.textContent = 'Verificando…';
+    try{
+      const url = SCRIPT_URL + '?action=checkin&codigo=' + encodeURIComponent(codigo);
+      const res = await fetch(url, { method: 'GET' });
+      const data = await res.json();
+      mostrarResultado(data, codigo);
+    }catch(err){
+      mostrarResultado({ ok:false, error:'No se pudo conectar con el servidor' }, codigo);
+    }
+  }
+
+  function actualizarStats(){
+    statsText.textContent = '✅ ' + scanCount.ok + ' validados · 🚫 ' + scanCount.rechazado + ' rechazados';
+  }
+
+  function mostrarResultado(data, codigoIngresado){
+    scanView.classList.add('hidden');
+    resultView.classList.remove('hidden');
+    manualInput.value = '';
+
+    const box = document.createElement('div');
+
+    if(data.ok){
+      scanCount.ok++;
+      const personas = data.entry ? (parseInt(data.entry.personas) || 1) : 1;
+      box.className = 'result ok';
+      box.innerHTML =
+        '<div class="icon">✅</div>' +
+        '<div class="headline">Ingreso válido</div>' +
+        '<div class="guest">' + escapeHtml(data.entry ? data.entry.nombre : '') + '</div>' +
+        '<div class="detail">' + (personas === 1 ? '1 persona' : personas + ' personas') + '</div>' +
+        '<div class="code">' + escapeHtml(data.entry ? data.entry.codigo : codigoIngresado) + '</div>';
+    } else if(data.yaUsado){
+      scanCount.rechazado++;
+      const hora = data.ingresoTs ? new Date(data.ingresoTs).toLocaleTimeString() : '';
+      box.className = 'result bad';
+      box.innerHTML =
+        '<div class="icon">🚫</div>' +
+        '<div class="headline">Código ya usado</div>' +
+        '<div class="guest">' + escapeHtml(data.entry ? data.entry.nombre : '') + '</div>' +
+        (hora ? '<div class="detail">Ingresó a las ' + hora + '</div>' : '') +
+        '<div class="code">' + escapeHtml(data.entry ? data.entry.codigo : codigoIngresado) + '</div>';
+    } else {
+      scanCount.rechazado++;
+      box.className = 'result bad';
+      box.innerHTML =
+        '<div class="icon">❌</div>' +
+        '<div class="headline">Código no válido</div>' +
+        '<div class="detail">' + escapeHtml(data.error || 'No se encontró este código') + '</div>' +
+        '<div class="code">' + escapeHtml(codigoIngresado) + '</div>';
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Escanear siguiente';
+    nextBtn.addEventListener('click', ()=>{
+      resultView.innerHTML = '';
+      resultView.classList.add('hidden');
+      scanView.classList.remove('hidden');
+      actualizarStats();
+      paused = false;
+      scanHint.textContent = 'Apunta la cámara al código QR de la invitación';
+    });
+    box.appendChild(nextBtn);
+    resultView.innerHTML = '';
+    resultView.appendChild(box);
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+</script>
+</body>
+</html>
